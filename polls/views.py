@@ -10,8 +10,13 @@ from django.contrib.auth import logout
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.db.models import Q
-from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse 
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.hashers import make_password
+from django.views.decorators.http import require_POST
+from django.urls import reverse
 
 
 
@@ -127,8 +132,10 @@ def user_edit(request):
 
 @login_required
 def users_page(request):
-    users = User.objects.all().order_by('id')  # Order users by ID in ascending order
-    return render(request, 'users.html', {'users': users, 'logged_in_user': request.user})
+    users = User.objects.all().order_by('id')
+    change_password_url = reverse('change_password')  # Use 'change_password' as the argument
+    return render(request, 'users.html', {'users': users, 'logged_in_user': request.user, 'change_password_url': change_password_url})
+
 
 
 def redirect_to_login(request):
@@ -175,30 +182,23 @@ def user_search(request):
 
 
 
-@login_required
-def change_password(request):
-    if request.method == "POST":
-        user_id = request.POST.get("user_id")
-        new_password = request.POST.get("new_password")
-        confirm_new_password = request.POST.get("confirm_new_password")
+@login_required  # Ensure the user is logged in to access this view
+@require_POST    # Only allow POST requests
+def change_password_view(request):
+    user_id = request.POST.get('id')
+    new_password = request.POST.get('new_password')
 
-        user = User.objects.get(pk=user_id)
-        
-        print(user_id)
-        print("new_password:", new_password)
-        print("confirm_new_password:", confirm_new_password)
+    try:
+        user = User.objects.get(id=user_id)
+        user.set_password(new_password)
+        user.save()
+        return JsonResponse({'message': 'Password changed successfully.'}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-        if new_password == confirm_new_password:
-            user.set_password(new_password)
-            user.save()
 
-            update_session_auth_hash(request, user)
-
-            return HttpResponse("Password changed successfully")
-        else:
-            return HttpResponse("New passwords do not match", status=400)
-
-    return HttpResponse("Invalid request", status=400)
 
 
 def index(request):
