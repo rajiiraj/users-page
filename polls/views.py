@@ -17,6 +17,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.http import require_POST
 from django.urls import reverse
+from django.utils import timezone
 
 
 
@@ -199,6 +200,23 @@ def change_password_view(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+def user_report(request):
+    total_users = User.objects.count()
+    active_users = User.objects.filter(last_login__isnull=False).count()
+
+    today = timezone.now().date()
+    users_joined_today = User.objects.filter(date_joined__date=today).count()
+
+    this_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    users_joined_this_month = User.objects.filter(date_joined__gte=this_month_start).count()
+
+    context = {
+        'total_users': total_users,
+        'active_users': active_users,
+        'users_joined_today': users_joined_today,
+        'users_joined_this_month': users_joined_this_month,
+    }
+    return render(request, 'user_report.html', context)
 
 
 def index(request):

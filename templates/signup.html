@@ -159,3 +159,35 @@
 </body>
 
 </html>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const signupForm = document.getElementById("signup-form");
+
+    signupForm.addEventListener("submit", function(event) {
+      event.preventDefault(); // Prevent default form submission
+
+      // Collect form data
+      const formData = new FormData(signupForm);
+
+      // Send AJAX request
+      fetch("{% url 'signup' %}", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Redirect to the users page upon successful signup
+          window.location.href = "{% url 'users' %}";
+        } else {
+          // Display error message
+          const errorMessage = data.error_message || "An error occurred during signup.";
+          alert(errorMessage);
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+    });
+  });
+</script>

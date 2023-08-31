@@ -37,3 +37,30 @@
   </div>
 </body>
 </html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+  $("#login-form").submit(function(event) {
+    event.preventDefault();  
+
+    // Serialize form data
+    var formData = $(this).serialize();
+
+    // Send AJAX request to handle login
+    $.ajax({
+      url: "{% url 'user_login' %}",
+      type: "POST",
+      data: formData,
+      success: function(response) {
+        // Redirect to 'users' page on successful login
+        window.location.href = "{% url 'users' %}";
+      },
+      error: function(xhr, status, error) {
+        // Display error message on failed login
+        var errorMessage = JSON.parse(xhr.responseText).message;
+        $("#error-message").text(errorMessage);
+      }
+    });
+  });
+});
+</script>

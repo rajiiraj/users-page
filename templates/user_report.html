@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Report</title>
+    
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <style>
+        .custom-table {
+            max-width: 400px; 
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>User Report</h1>
+
+        <table class="table custom-table">
+            <tbody>
+                <tr>
+                    <td>Total Users</td>
+                    <td>{{ total_users }}</td>
+                </tr>
+                <tr>
+                    <td>Total Active Users</td>
+                    <td>{{ active_users }}</td>
+                </tr>
+                <tr>
+                    <td>Users Joined Today</td>
+                    <td>{{ users_joined_today }}</td>
+                </tr>
+                <tr>
+                    <td>Users Joined This Month</td>
+                    <td>{{ users_joined_this_month }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Include Bootstrap JS and jQuery (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
