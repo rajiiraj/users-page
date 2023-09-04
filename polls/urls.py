@@ -14,7 +14,8 @@ urlpatterns = [
     path('change_password/', views.change_password_view, name='change_password'),
     path('user_report/', views.user_report, name='user_report'),
     path('documents/', views.document_list, name='document_list'),
-    path('documents/serve/<int:document_id>/', views.serve_document, name='serve_document')
+    path('documents/serve/<int:document_id>/', views.serve_document, name='serve_document'),
+    path('delete_document/', views.delete_document, name='delete_document'),
 
     
 

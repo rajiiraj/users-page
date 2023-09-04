@@ -30,6 +30,7 @@ from django.http import FileResponse, HttpResponseNotFound
 from pathlib import Path
 import shutil
 from django.http import Http404, FileResponse
+from django.http import JsonResponse  # Import JsonResponse
 
 
 
@@ -292,6 +293,20 @@ def serve_document(request, document_id):
     else:
         raise Http404("File not found")
 
+
+@csrf_exempt
+@require_POST
+def delete_document(request):
+    document_id = request.POST.get('id')
+    
+    try:
+        document = Documents.objects.get(pk=document_id)
+        document.delete()
+        return JsonResponse({'message': 'Document deleted successfully.'}, status=200)
+    except Documents.DoesNotExist:
+        return JsonResponse({'error': 'Document not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 def index(request):
