@@ -16,16 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from polls.views import user_login, redirect_to_login   # Import the renamed function
-from polls.views import signup  # Import the renamed function
-
+from polls.views import user_login, redirect_to_login
+from polls.views import signup
 
 urlpatterns = [
-    path("", redirect_to_login, name="redirect_to_login"),  # Redirect root URL to login page
-
+    path("", redirect_to_login, name="redirect_to_login"),
     path("polls/", include("polls.urls")),
     path("admin/", admin.site.urls),
     path("login/", user_login, name="user_login"),
-    path("signup/", signup)  # Use the renamed function
-
+    path("signup/", signup),
 ]
+

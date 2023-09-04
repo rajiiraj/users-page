@@ -13,6 +13,9 @@ urlpatterns = [
     path('user_search/', views.user_search, name='user_search'),
     path('change_password/', views.change_password_view, name='change_password'),
     path('user_report/', views.user_report, name='user_report'),
+    path('documents/', views.document_list, name='document_list'),
+    path('documents/serve/<int:document_id>/', views.serve_document, name='serve_document')
 
+    
 
 ]

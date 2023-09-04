@@ -1,3 +1,5 @@
+import os  # Add this import at the beginning of your views.py
+from django.conf import settings  # Add this import at the beginning of your views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login  
@@ -8,7 +10,7 @@ from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.contrib.auth import get_user_model
-from django.http import JsonResponse
+from django.http import HttpResponse, Http404  # Import Http404
 from django.db.models import Q
 from django.http import HttpResponse 
 from django.contrib.auth.forms import PasswordChangeForm
@@ -18,6 +20,16 @@ from django.contrib.auth.hashers import make_password
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.utils import timezone
+from .models import Documents
+from django.views.decorators.csrf import csrf_exempt  # Import this decorator
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from urllib.parse import quote  # Import quote function for URL encoding
+from django.core.files.storage import FileSystemStorage
+from django.http import FileResponse, HttpResponseNotFound
+from pathlib import Path
+import shutil
+
 
 
 
@@ -217,6 +229,68 @@ def user_report(request):
         'users_joined_this_month': users_joined_this_month,
     }
     return render(request, 'user_report.html', context)
+
+
+@csrf_exempt
+def document_list(request):
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('document')
+
+        if uploaded_file:
+            # Check if the uploaded file has an allowed file extension
+            allowed_extensions = ['pdf', 'doc', 'txt']
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+
+            if file_extension in allowed_extensions:
+
+                # Create a new document entry in the database
+                document = Documents(
+                    document_name=uploaded_file.name,
+                    document_type=file_extension,
+                    document_size=uploaded_file.size,
+                    uploaded_date=timezone.now(),
+                )
+                document.save()
+            else:
+                # Display an error message if the file extension is not allowed
+                return render(request, 'document_list.html', {'error_message': 'Please upload only PDF, DOC, or text files.'})
+
+        # After successfully processing the POST request, redirect to the same page (GET request)
+        return redirect('document_list')
+
+    # If it's a GET request, show the document list
+    documents = Documents.objects.all()
+    context = {'documents': documents}
+    return render(request, 'document_list.html', context)
+
+
+
+
+def serve_document(request, document_id):
+    document = get_object_or_404(Documents, pk=document_id)
+
+    source_directory = Path("/home/oem/Downloads")
+    source_file_path = source_directory / document.document_name
+
+    if source_file_path.is_file():
+        target_directory = Path("/home/oem/Projects/workshop/uploadfile")
+
+        target_file_path = target_directory / document.document_name
+
+        # Copy the file from the source directory to the target directory
+        try:
+            shutil.copyfile(source_file_path, target_file_path)
+        except Exception as e:
+            return HttpResponseNotFound(f"Error copying file: {str(e)}")
+
+        # Serve the copied file as a download response
+        response = FileResponse(open(target_file_path, 'rb'), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{document.document_name}"'
+
+        return response
+    else:
+        return HttpResponseNotFound("File not found")
+
 
 
 def index(request):

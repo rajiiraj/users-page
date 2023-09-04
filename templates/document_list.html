@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Document List</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="document" accept=".pdf, .doc, .txt">
+        <button type="submit">Upload File</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Uploaded Date</th>
+                <th>Action</th>  <!-- Added a new table header for the "Download" action -->
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in documents %}
+            <tr>
+                <td>{{ document.document_name }}</td>
+                <td>{{ document.document_type }}</td>
+                <td>{{ document.document_size }} bytes</td>
+                <td>{{ document.uploaded_date }}</td>
+                
+                <td>
+                    <a href="{% url 'serve_document' document.id %}" download="{{ document.document_name }}">
+                        Download
+                    </a>
+                </td>
+        
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>
