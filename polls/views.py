@@ -29,6 +29,7 @@ from django.core.files.storage import FileSystemStorage
 from django.http import FileResponse, HttpResponseNotFound
 from pathlib import Path
 import shutil
+from django.http import Http404, FileResponse
 
 
 
@@ -242,10 +243,24 @@ def document_list(request):
             file_extension = uploaded_file.name.split('.')[-1].lower()
 
             if file_extension in allowed_extensions:
+                # Specify the directory where you want to save the file
+                upload_dir = os.path.join(settings.BASE_DIR, 'uploadfile')
+                os.makedirs(upload_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
+                # Use the original filename of the uploaded file
+                original_filename = uploaded_file.name
+
+                # Construct the full path to save the file
+                full_path = os.path.join(upload_dir, original_filename)
+
+                # Save the uploaded file to the specified location
+                with open(full_path, 'wb') as destination:
+                    for chunk in uploaded_file.chunks():
+                        destination.write(chunk)
 
                 # Create a new document entry in the database
                 document = Documents(
-                    document_name=uploaded_file.name,
+                    document_name=original_filename,
                     document_type=file_extension,
                     document_size=uploaded_file.size,
                     uploaded_date=timezone.now(),
@@ -258,38 +273,24 @@ def document_list(request):
         # After successfully processing the POST request, redirect to the same page (GET request)
         return redirect('document_list')
 
-    # If it's a GET request, show the document list
     documents = Documents.objects.all()
     context = {'documents': documents}
     return render(request, 'document_list.html', context)
 
-
-
-
+@csrf_exempt
 def serve_document(request, document_id):
     document = get_object_or_404(Documents, pk=document_id)
 
-    source_directory = Path("/home/oem/Downloads")
-    source_file_path = source_directory / document.document_name
+    file_directory = os.path.join(settings.BASE_DIR, 'uploadfile')
 
-    if source_file_path.is_file():
-        target_directory = Path("/home/oem/Projects/workshop/uploadfile")
+    file_path = os.path.join(file_directory, document.document_name)
 
-        target_file_path = target_directory / document.document_name
-
-        # Copy the file from the source directory to the target directory
-        try:
-            shutil.copyfile(source_file_path, target_file_path)
-        except Exception as e:
-            return HttpResponseNotFound(f"Error copying file: {str(e)}")
-
-        # Serve the copied file as a download response
-        response = FileResponse(open(target_file_path, 'rb'), content_type='application/octet-stream')
+    if os.path.isfile(file_path):
+        response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
         response['Content-Disposition'] = f'attachment; filename="{document.document_name}"'
-
         return response
     else:
-        return HttpResponseNotFound("File not found")
+        raise Http404("File not found")
 
 
 
