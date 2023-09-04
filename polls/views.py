@@ -267,9 +267,13 @@ def document_list(request):
                     uploaded_date=timezone.now(),
                 )
                 document.save()
+                
             else:
                 # Display an error message if the file extension is not allowed
-                return render(request, 'document_list.html', {'error_message': 'Please upload only PDF, DOC, or text files.'})
+                error_message = 'Please upload only PDF, DOC, or text files.'
+                documents = Documents.objects.all()
+                context = {'documents': documents, 'error_message': error_message}
+                return render(request, 'document_list.html', context)
 
         # After successfully processing the POST request, redirect to the same page (GET request)
         return redirect('document_list')
@@ -294,6 +298,9 @@ def serve_document(request, document_id):
         raise Http404("File not found")
 
 
+
+
+
 @csrf_exempt
 @require_POST
 def delete_document(request):
@@ -301,12 +308,23 @@ def delete_document(request):
     
     try:
         document = Documents.objects.get(pk=document_id)
+
+        # Get the path to the file
+        file_path = os.path.join(settings.BASE_DIR, 'uploadfile', document.document_name)
+
+        if os.path.exists(file_path):
+            # Delete the file from the folder
+            os.remove(file_path)
+
+        # Now, delete the database entry
         document.delete()
+
         return JsonResponse({'message': 'Document deleted successfully.'}, status=200)
     except Documents.DoesNotExist:
         return JsonResponse({'error': 'Document not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 
 def index(request):
