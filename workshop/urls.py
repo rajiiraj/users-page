@@ -25,5 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("login/", user_login, name="user_login"),
     path("signup/", signup),
+    path('notes/', include('notes.urls')),  # Include the 'notes' app's URLs
+
 ]
 
